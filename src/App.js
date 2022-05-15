@@ -25,7 +25,6 @@ class App extends React.Component {
 
   async componentDidMount() {
     const response = await axios.get("https://api.currencyapi.com/v3/currencies?currencies=", { headers: { apikey: apikey } });
-    console.log(response.data.data);
     var currencies = [];
     for (var currency in response.data.data) {
       currencies.push(currency);
@@ -34,14 +33,13 @@ class App extends React.Component {
   }
 
   async getBestArbitragePath() {
-    var path = new Set([this.state.baseCurrency]);
+    var path = [`1 ${this.state.baseCurrency}`];
     this.setState({ bestPath: path, arbitrage: 1 });
     if (!this.state.exchangeRates || this.state.exchangeRates.size === 0) {
       this.setState({ loadingExchangeRates: true });
       for (let i = 0; i < this.state.currencies.length; i++) {
         var currency = this.state.currencies[i];
         const response = await axios.get(`https://api.currencyapi.com/v3/latest?base_currency=${currency}`, { headers: { apikey: apikey } });
-        console.log(response.data.data);
         this.state.exchangeRates.set(currency, response.data.data);
         this.setState({ loadedExchangeRates: this.state.exchangeRates.size })
       }
@@ -105,7 +103,7 @@ class App extends React.Component {
       }
     }
 
-    path.add(bestAdditionalCurrency);
+    path.push(`${(bestAdditionalCurrencyValue).toFixed(6)} ${bestAdditionalCurrency}`);
     remainingCurrencies.delete(bestAdditionalCurrency);
     this.setState({ bestPath: path, arbitrage: bestAdditionalCurrencyArbitrageValue });
 
@@ -155,9 +153,9 @@ class App extends React.Component {
               :
               <Alert variant='success' className='mt-3'>
                 <Alert.Heading>
-                  {`Maximum profit of ${(100 * (this.state.arbitrage - 1)).toFixed(6)}% with the below arbitrage path`}
+                  {`Maximum profit of ${(100 * (this.state.arbitrage - 1)).toFixed(4)}% with the below arbitrage path`}
                 </Alert.Heading>
-                <p>{`${[...this.state.bestPath].join(" => ")} => ${this.state.baseCurrency}`}</p>
+                <p>{`${[...this.state.bestPath].join(" => ")} => ${this.state.arbitrage.toFixed(6)} ${this.state.baseCurrency}`}</p>
               </Alert>
             }
           </div>
